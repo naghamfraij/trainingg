@@ -1,0 +1,76 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f0f4f8;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding-top: 60px;
+}
+
+.container {
+  text-align: center;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 340px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+h1 {
+  margin-bottom: 12px;
+  font-size: 26px;
+  color: #1d3557;
+}
+
+#status {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #444;
+  /* tried making this bold but looked too aggressive */
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 6px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.cell {
+  width: 100px;
+  height: 100px;
+  background: #eef2f7;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 42px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  line-height: 100px;
+}
+
+.cell:hover {
+  background: #dde4ef;
+}
+
+button {
+  margin-top: 8px;
+  padding: 10px 28px;
+  background: #1d3557;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16293f;
+}

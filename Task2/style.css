@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #e8f3ff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #1d3557;
+}
+
+.game-box {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  text-align: center;
+  width: 500px;
+  /* tried max-width but it looked weird on mobile, this works for now */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 28px;
+}
+
+p {
+  color: #55708e;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card {
+  width: 100%;
+  height: 80px;
+  border-radius: 10px;
+  background: #457b9d;
+  cursor: pointer;
+  border: none;
+  font-size: 34px;
+  line-height: 80px;
+  text-align: center;
+}
+
+.card:hover {
+  background: #356580;
+}
+
+.card.flipped {
+  background: #f7fbff;
+  border: 2px solid #a8dadc;
+  color: #1d3557;
+}
+
+.card.matched {
+  background: #d8f3dc;
+  border: 2px solid #67b876;
+  cursor: default;
+}
+
+.message {
+  font-weight: bold;
+  color: #2a9d5b;
+  font-size: 18px;
+  min-height: 28px;
+  margin: 10px 0;
+}
+
+#reset-button {
+  background: #e63946;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+#reset-button:hover {
+  background: #c92835;
+}

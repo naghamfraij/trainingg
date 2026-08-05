@@ -2,7 +2,16 @@ var currentPlayer = "X";
 var gameOver = false;
 var board = ["", "", "", "", "", "", "", "", ""];
 var status = document.getElementById("status");
-
+var boardElement = document.getElementById("board");
+for (var i = 0; i < 9; i++) {
+  var cell = document.createElement("div");
+  cell.className = "cell";
+  cell.dataset.index = i;
+  cell.onclick = function () {
+    handleClick(this, Number(this.dataset.index));
+  };
+  boardElement.appendChild(cell);
+}
 var winCombos = [
   [0, 1, 2],
   [3, 4, 5],

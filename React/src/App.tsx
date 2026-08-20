@@ -2,38 +2,10 @@ import { useState } from "react";
 
 import SearchBar from "./components/SearchBar";
 import LocationButton from "./components/LocationButton";
-import UnitToggle from "./components/UnitToggle";
+import WeatherCard from "./components/WeatherCard";
 import ForecastCard from "./components/ForecastCard";
 
-type WeatherData = {
-  name: string;
-  main: {
-    temp: number;
-    humidity: number;
-  };
-  weather: {
-    description: string;
-    icon: string;
-  }[];
-  wind: {
-    speed: number;
-  };
-};
-
-type ForecastItem = {
-  dt: number;
-  main: {
-    temp: number;
-  };
-  weather: {
-    description: string;
-    icon: string;
-  }[];
-};
-
-type ForecastData = {
-  list: ForecastItem[];
-};
+import type { WeatherData, ForecastItem, ForecastData } from "./weatherTypes";
 
 function App() {
   const [city, setCity] = useState("");
@@ -44,23 +16,34 @@ function App() {
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
 
   const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+  const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
-  const getForecast = async (cityName: string) => {
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${API_KEY}&units=metric`
-    );
+  const fetchData = async (url: string) => {
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error("Forecast failed");
+      throw new Error("Request failed");
     }
 
-    const data: ForecastData = await response.json();
+    return response.json();
+  };
 
-    const dailyForecast = data.list.filter((item) =>
-      new Date(item.dt * 1000).getHours() === 12
+  const getForecast = async (cityName: string) => {
+    const data: ForecastData = await fetchData(
+      `${BASE_URL}/forecast?q=${cityName}&appid=${API_KEY}&units=metric`,
     );
 
-    setForecast(dailyForecast.slice(0, 5));
+    const dailyForecast = data.list
+      .filter((item) => new Date(item.dt * 1000).getHours() === 12)
+      .slice(0, 5);
+
+    setForecast(dailyForecast);
+  };
+
+  const updateWeather = async (data: WeatherData) => {
+    setWeather(data);
+    setCity(data.name);
+    await getForecast(data.name);
   };
 
   const getWeather = async () => {
@@ -73,24 +56,13 @@ function App() {
     setError("");
 
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+      const data: WeatherData = await fetchData(
+        `${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`,
       );
 
-      if (!response.ok) {
-        setError("City not found");
-        setWeather(null);
-        setForecast([]);
-        return;
-      }
-
-      const data: WeatherData = await response.json();
-
-      setWeather(data);
-
-      await getForecast(data.name);
+      await updateWeather(data);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Could not get weather data");
       setWeather(null);
       setForecast([]);
     } finally {
@@ -98,128 +70,49 @@ function App() {
     }
   };
 
-  const getLocationWeather = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
-      return;
-    }
-
+  const getLocationWeather = async (latitude: number, longitude: number) => {
     setLoading(true);
     setError("");
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+    try {
+      const data: WeatherData = await fetchData(
+        `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`,
+      );
 
-        try {
-          const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
-          );
-
-          if (!response.ok) {
-            setError("Could not get weather for your location");
-            setWeather(null);
-            setForecast([]);
-            return;
-          }
-
-          const data: WeatherData = await response.json();
-
-          setWeather(data);
-          setCity(data.name);
-
-          await getForecast(data.name);
-        } catch {
-          setError("Something went wrong. Please try again.");
-          setWeather(null);
-          setForecast([]);
-        } finally {
-          setLoading(false);
-        }
-      },
-      () => {
-        setError("Could not access your location");
-        setLoading(false);
-      }
-    );
+      await updateWeather(data);
+    } catch {
+      setError("Could not get weather data");
+      setWeather(null);
+      setForecast([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const changeUnit = () => {
-    if (unit === "metric") {
-      setUnit("imperial");
-    } else {
-      setUnit("metric");
-    }
-  };
-
-  const convertTemperature = (temp: number) => {
-    if (unit === "metric") {
-      return temp;
-    } else {
-      return (temp * 9) / 5 + 32;
-    }
+    setUnit(unit === "metric" ? "imperial" : "metric");
   };
 
   return (
     <div>
       <h1>Weather App</h1>
 
-      <SearchBar
-        city={city}
-        setCity={setCity}
-        onSearch={getWeather}
-      />
+      <SearchBar city={city} setCity={setCity} onSearch={getWeather} />
 
-      <LocationButton onLocation={getLocationWeather} />
+      <LocationButton onLocation={getLocationWeather} onError={setError} />
 
-      <UnitToggle
-        unit={unit}
-        onChange={changeUnit}
-      />
+      <button onClick={changeUnit}>
+        Switch to {unit === "metric" ? "Fahrenheit" : "Celsius"}
+      </button>
 
       {loading && <p>Loading...</p>}
 
       {error && <p>{error}</p>}
 
-      {weather && !loading && (
-        <div>
-          <h2>{weather.name}</h2>
-
-          <img
-            src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-            alt={weather.weather[0].description}
-          />
-
-          <p>
-            Temperature:{" "}
-            {Math.round(convertTemperature(weather.main.temp))}
-            {unit === "metric" ? " °C" : " °F"}
-          </p>
-
-          <p>Weather: {weather.weather[0].description}</p>
-
-          <p>Humidity: {weather.main.humidity}%</p>
-
-          <p>Wind Speed: {weather.wind.speed} m/s</p>
-        </div>
-      )}
+      {weather && !loading && <WeatherCard weather={weather} unit={unit} />}
 
       {forecast.length > 0 && !loading && (
-        <div>
-          <h2>5-Day Forecast</h2>
-
-          {forecast.map((item) => (
-            <ForecastCard
-              key={item.dt}
-              date={new Date(item.dt * 1000).toLocaleDateString()}
-              temp={convertTemperature(item.main.temp)}
-              description={item.weather[0].description}
-              icon={item.weather[0].icon}
-              unit={unit}
-            />
-          ))}
-        </div>
+        <ForecastCard forecast={forecast} unit={unit} />
       )}
     </div>
   );

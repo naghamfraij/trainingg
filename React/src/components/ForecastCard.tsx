@@ -1,33 +1,40 @@
+import type { ForecastItem } from "../weatherTypes";
+
 type ForecastCardProps = {
-  date: string;
-  temp: number;
-  description: string;
-  icon: string;
+  forecast: ForecastItem[];
   unit: "metric" | "imperial";
 };
 
-function ForecastCard({
-  date,
-  temp,
-  description,
-  icon,
-  unit,
-}: ForecastCardProps) {
+function ForecastCard({ forecast, unit }: ForecastCardProps) {
+  const convertTemperature = (temp: number) => {
+    if (unit === "metric") {
+      return temp;
+    }
+
+    return (temp * 9) / 5 + 32;
+  };
+
   return (
     <div>
-      <h3>{date}</h3>
+      <h2>5-Day Forecast</h2>
 
-      <img
-        src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
-        alt={description}
-      />
+      {forecast.map((item) => (
+        <div key={item.dt}>
+          <h3>{new Date(item.dt * 1000).toLocaleDateString()}</h3>
 
-      <p>{description}</p>
+          <img
+            src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
+            alt={item.weather[0].description}
+          />
 
-      <p>
-        {Math.round(temp)}
-        {unit === "metric" ? " °C" : " °F"}
-      </p>
+          <p>{item.weather[0].description}</p>
+
+          <p>
+            {Math.round(convertTemperature(item.main.temp))}
+            {unit === "metric" ? " °C" : " °F"}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }

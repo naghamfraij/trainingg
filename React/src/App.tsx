@@ -5,7 +5,13 @@ import LocationButton from "./components/LocationButton";
 import WeatherCard from "./components/WeatherCard";
 import ForecastCard from "./components/ForecastCard";
 
-import type { WeatherData, ForecastItem, ForecastData } from "./weatherTypes";
+import type { WeatherData, ForecastItem } from "./weatherTypes";
+
+import {
+  getWeatherByCity,
+  getWeatherByLocation,
+  getForecast,
+} from "./services/weatherService";
 
 function App() {
   const [city, setCity] = useState("");
@@ -15,35 +21,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
 
-  const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
-  const BASE_URL = "https://api.openweathermap.org/data/2.5";
+  const updateWeather = async (data: WeatherData) => {
+    setWeather(data);
+    setCity(data.name);
 
-  const fetchData = async (url: string) => {
-    const response = await fetch(url);
+    const forecastData = await getForecast(data.name);
 
-    if (!response.ok) {
-      throw new Error("Request failed");
-    }
-
-    return response.json();
-  };
-
-  const getForecast = async (cityName: string) => {
-    const data: ForecastData = await fetchData(
-      `${BASE_URL}/forecast?q=${cityName}&appid=${API_KEY}&units=metric`,
-    );
-
-    const dailyForecast = data.list
+    const dailyForecast = forecastData.list
       .filter((item) => new Date(item.dt * 1000).getHours() === 12)
       .slice(0, 5);
 
     setForecast(dailyForecast);
-  };
-
-  const updateWeather = async (data: WeatherData) => {
-    setWeather(data);
-    setCity(data.name);
-    await getForecast(data.name);
   };
 
   const getWeather = async () => {
@@ -56,9 +44,7 @@ function App() {
     setError("");
 
     try {
-      const data: WeatherData = await fetchData(
-        `${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`,
-      );
+      const data = await getWeatherByCity(city);
 
       await updateWeather(data);
     } catch {
@@ -70,14 +56,15 @@ function App() {
     }
   };
 
-  const getLocationWeather = async (latitude: number, longitude: number) => {
+  const getLocationWeather = async (
+    latitude: number,
+    longitude: number,
+  ) => {
     setLoading(true);
     setError("");
 
     try {
-      const data: WeatherData = await fetchData(
-        `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`,
-      );
+      const data = await getWeatherByLocation(latitude, longitude);
 
       await updateWeather(data);
     } catch {
